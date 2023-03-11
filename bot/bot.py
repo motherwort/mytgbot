@@ -1,5 +1,5 @@
 from telebot import TeleBot, types
-import shelve
+import redis
 import config
 from models import db, User, Message
 import time
@@ -8,6 +8,12 @@ from enum import Enum
 
 
 bot = TeleBot(config.TOKEN)
+redis_client = redis.StrictRedis(
+    host=config.REDIS_HOST,
+    port=config.REDIS_PORT, 
+    password=config.REDIS_PASS,
+    decode_responses=True
+)
 
 
 class States(Enum):
@@ -54,24 +60,23 @@ def parse_button(message_text):
 
 
 def get_user_state(username):
-    with shelve.open(config.USER_STATUS_SHELVE) as storage:
-        return storage.get(username, States.MENU)
+    return States(int(redis_client.get(f"{username}:state")))
 
-def set_user_state(username, state):
-    with shelve.open(config.USER_STATUS_SHELVE) as storage:
-        storage[username] = state
+
+def set_user_state(username, state: States):
+    redis_client.set(f"{username}:state", state.value)
+
 
 def remember_whom_to_send(username, send_to_username):
-    with shelve.open(config.USER_SEND_TO_SHELVE) as storage:
-        storage[username] = send_to_username
+    redis_client.set(f"{username}:send_to", send_to_username)
+
 
 def get_whom_to_send(username):
-    with shelve.open(config.USER_SEND_TO_SHELVE) as storage:
-        return storage.get(username)
+    return redis_client.get(f"{username}:send_to")
+
 
 def reset_whom_to_send(username):
-    with shelve.open(config.USER_SEND_TO_SHELVE) as storage:
-        storage.pop(username, None)
+    redis_client.delete(f"{username}:send_to")
 
 
 def menu_routine(bot, message):

@@ -6,5 +6,7 @@ load_dotenv()
 
 TOKEN = environ.get("TOKEN")
 DB_NAME = environ.get("DB_NAME")
-USER_STATUS_SHELVE = environ.get("USER_STATUS_SHELVE")
-USER_SEND_TO_SHELVE = environ.get("USER_SEND_TO_SHELVE")
+
+REDIS_HOST = environ.get("REDIS_HOST")
+REDIS_PORT = environ.get("REDIS_PORT")
+REDIS_PASS = environ.get("REDIS_PASS")
